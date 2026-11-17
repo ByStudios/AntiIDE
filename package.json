@@ -1,0 +1,40 @@
+{
+  "name": "anti-ide",
+  "version": "1.0.0",
+  "description": "Anti IDE - Clon de IntelliJ IDEA / NetBeans para PC. Editor multi-lenguaje estilo Darcula.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable",
+    "web": "npx serve ."
+  },
+  "build": {
+    "appId": "com.antiide.app",
+    "productName": "Anti IDE",
+    "icon": "logo.png",
+    "files": [
+      "*.js",
+      "*.html",
+      "*.css",
+      "logo.png",
+      "!node_modules/*"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  },
+  "author": "Anti IDE",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  },
+  "dependencies": {
+    "monaco-editor": "^0.52.2"
+  }
+}

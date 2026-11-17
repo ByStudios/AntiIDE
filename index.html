@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anti IDE</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="titlebar">
+  <img src="logo.png" id="logo" alt="Anti IDE">
+  <span id="title-text"><b>Anti IDE</b> <span id="project-name">- No project open</span></span>
+  <div id="title-actions">
+    <button id="btn-open" title="Open Folder">📂 Open</button>
+    <button id="btn-run" class="run" title="Run Shift+F10">▶ Run</button>
+    <button id="btn-build" title="Build Ctrl+F9">🔨 Build</button>
+    <button id="btn-jdk" title="JDK Manager (instalar versiones)">☕ JDK</button>
+    <button id="btn-terminal-toggle" title="Terminal">>_ Terminal</button>
+  </div>
+</div>
+<div id="menubar">
+  <div class="menu-item" id="m-file">File ▾<div class="menu-drop hidden" id="d-file"><div data-a="open">📂 Open Folder</div><div data-a="new">+ New Project</div><div data-a="save">💾 Save Ctrl+S</div><div data-a="jdk">☕ JDK Manager</div><div data-a="diag">🔍 Diagnosticar</div></div></div>
+  <div class="menu-item" id="m-edit">Edit ▾<div class="menu-drop hidden" id="d-edit"><div data-a="format">✨ Reformat Code</div><div data-a="find">🔍 Find Ctrl+F</div></div></div>
+  <div class="menu-item" id="m-view">View ▾<div class="menu-drop hidden" id="d-view"><div data-a="explorer">🗂️ Project Explorer</div><div data-a="terminal">>_ Terminal</div></div></div>
+  <div class="menu-item" id="m-run">Run ▾<div class="menu-drop hidden" id="d-run"><div data-a="run">▶ Run Shift+F10</div><div data-a="build">🔨 Build</div></div></div>
+  <div class="menu-item" id="m-git">VCS / Git ▾<div class="menu-drop hidden" id="d-git"><div data-a="gstatus">🌿 Git Status</div><div data-a="glog">📜 Git Log</div></div></div>
+  <div class="menu-item" id="m-help">Help<div class="menu-drop hidden" id="d-help"><div data-a="about">ℹ️ About</div><div data-a="diag">🔍 Diagnosticar</div></div></div>
+  <span id="search-top">🔍 Search Everywhere <i>Ctrl+P</i></span>
+</div>
+<div id="main">
+  <div id="left-strip">
+    <button class="strip-btn active" data-view="project" title="Project">🗂️</button>
+    <button class="strip-btn" data-view="structure" title="Structure">🧱</button>
+    <button class="strip-btn" data-view="git" title="Git">🌿</button>
+    <button class="strip-btn" data-view="run" title="Run">▶️</button>
+    <button class="strip-btn" data-view="debug" title="Debug">🐞</button>
+    <button class="strip-btn" data-view="plugins" title="Plugins">🔌</button>
+    <div style="flex:1"></div>
+    <button class="strip-btn" data-view="settings" title="Settings">⚙️</button>
+  </div>
+  <div id="sidebar">
+    <div id="view-project" class="side-view">
+      <div class="side-header">Project <span id="root-label"></span>
+        <span style="float:right"><button id="btn-new-file" title="New File">+📄</button><button id="btn-new-folder" title="New Folder">+📁</button><button id="btn-refresh" title="Refresh">↻</button></span>
+      </div>
+      <div id="explorer"></div>
+    </div>
+    <div id="view-structure" class="side-view hidden">
+      <div class="side-header">Structure</div>
+      <div id="structure-list" class="pad">Abre un archivo para ver funciones / clases.</div>
+    </div>
+    <div id="view-git" class="side-view hidden">
+      <div class="side-header">Git</div>
+      <div class="pad">
+        <button id="btn-git-status">Status</button>
+        <button id="btn-git-log">Log</button>
+        <div style="margin-top:8px"><input id="git-msg" placeholder="Commit message..." style="width:100%"><button id="btn-git-commit" style="margin-top:4px;width:100%">Commit</button></div>
+        <pre id="git-out"></pre>
+      </div>
+    </div>
+    <div id="view-run" class="side-view hidden">
+      <div class="side-header">Run Configurations</div>
+      <div class="pad">
+        <div>▶ Current file: <b id="run-target">ninguno</b></div>
+        <div style="margin-top:8px;font-size:12px;color:#9da0a8">Soportado: JS (node) • TS • Python • Java (javac) • C/C++ (gcc) • Go • PHP • Ruby • Rust • PowerShell • HTML preview</div>
+        <button id="btn-run2" style="margin-top:8px">▶ Run Shift+F10</button>
+      </div>
+    </div>
+    <div id="view-debug" class="side-view hidden">
+      <div class="side-header">Debug</div>
+      <div class="pad">Breakpoints y watches en v1.1. Por ahora usa Run + Terminal.<br><br>Tip: usa <code>console.log / System.out.println</code> y ve salida abajo.</div>
+    </div>
+    <div id="view-plugins" class="side-view hidden">
+      <div class="side-header">Plugins / SDKs</div>
+      <div class="pad" id="plugins-list">
+        <label><input type="checkbox" checked> Java 21 (Temurin)</label><br>
+        <label><input type="checkbox" checked> Node 24</label><br>
+        <label><input type="checkbox" checked> Python</label><br>
+        <label><input type="checkbox" checked> C/C++ (gcc)</label><br>
+        <label><input type="checkbox" checked> Go, PHP, Ruby</label><br>
+        <label><input type="checkbox"> Kotlin (requiere kotlinc)</label><br>
+        <label><input type="checkbox"> Flutter / Dart</label>
+      </div>
+    </div>
+    <div id="view-settings" class="side-view hidden">
+      <div class="side-header">Settings</div>
+      <div class="pad">
+        Theme: <select id="sel-theme"><option value="vs-dark">Darcula (oscuro)</option><option value="vs">Light</option><option value="hc-black">High contrast</option></select><br><br>
+        Font size: <input id="font-size" type="number" value="14" style="width:60px"><br><br>
+        Minimap: <input type="checkbox" id="chk-minimap" checked><br><br>
+        <button id="btn-about">About Anti IDE</button>
+      </div>
+    </div>
+  </div>
+  <div id="center">
+    <div id="welcome">
+      <img src="logo.png" style="width:110px;border-radius:18px">
+      <h1>Welcome to Anti IDE</h1>
+      <p>Clon ligero de <b>IntelliJ IDEA + NetBeans</b> para PC • Todos los lenguajes</p>
+      <div id="welcome-btns">
+        <button id="w-new">+ New Project</button>
+        <button id="w-open">📂 Open Folder</button>
+        <button id="w-demo">⚡ Abrir demo Java</button>
+        <button id="w-diag">🔍 Diagnosticar</button>
+      </div>
+      <div id="welcome-tips">Shift+F10 Run • Ctrl+S Save • Ctrl+P Go to file • Terminal abajo • Git a la izquierda</div>
+    </div>
+    <div id="tabsbar" class="hidden"><div id="tabs"></div><div id="breadcrumb"></div></div>
+    <div id="editor" class="hidden" style="flex:1;min-height:200px"></div>
+    <textarea id="fallback-editor" class="hidden" spellcheck="false" style="flex:1;min-height:200px;background:#1e1f22;color:#bcbec4;border:0;padding:10px;font-family:Consolas,monospace;font-size:14px;resize:none;outline:none"></textarea>
+    <div id="bottom">
+      <div id="bottom-tabs">
+        <button class="btab active" data-b="run">Run</button>
+        <button class="btab" data-b="terminal">Terminal</button>
+        <button class="btab" data-b="problems">Problems</button>
+        <button class="btab" data-b="preview">Preview</button>
+        <span id="run-status"></span>
+      </div>
+      <div id="panel-run" class="bpanel"><pre id="run-out">Presiona ▶ Run para compilar y ejecutar el archivo actual.</pre></div>
+      <div id="panel-terminal" class="bpanel hidden">
+        <div id="term-out"></div>
+        <div id="term-input-row"><span id="term-ps">PS&gt;</span><input id="term-in" placeholder="escribe comando y Enter (ej: node main.js, javac Main.java, git status)"></div>
+      </div>
+      <div id="panel-problems" class="bpanel hidden"><pre id="problems-out">No problems.</pre></div>
+      <div id="panel-preview" class="bpanel hidden"><iframe id="preview-frame" style="width:100%;height:100%;border:0;background:white"></iframe></div>
+    </div>
+  </div>
+</div>
+<div id="statusbar">
+  <span id="st-branch">⎇ -</span><span id="st-file">-</span><span id="st-pos">Ln 1, Col 1</span>
+  <span style="flex:1"></span>
+  <span id="st-lang">-</span><span class="st-jdk" title="JDK activo">☕ Sin JDK</span><span>UTF-8</span><span>Node 24</span><span>🔒</span>
+</div>
+<div id="ctx-menu" class="hidden"></div>
+<div id="err-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#a33;color:white;padding:6px 12px;z-index:99999;font-size:12px"></div>
+<div id="modal-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100000;display:flex;align-items:center;justify-content:center">
+  <div style="background:#393b40;border:1px solid #555;border-radius:10px;padding:16px;min-width:340px;max-width:480px">
+    <div id="modal-title" style="font-weight:bold;margin-bottom:10px;font-size:14px"></div>
+    <div id="modal-msg" style="color:#bcbec4;margin-bottom:10px;white-space:pre-wrap"></div>
+    <input id="modal-input" style="width:100%;display:none" placeholder="">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="modal-cancel">Cancelar</button>
+      <button id="modal-ok" style="background:#3574f0;color:white;border-color:#3574f0">Aceptar</button>
+    </div>
+  </div>
+</div>
+<div id="np-overlay" class="hidden">
+  <div id="np-dialog">
+    <div id="np-head"><span>🗂️ New Project</span><span id="np-close">✕</span></div>
+    <div id="np-body">
+      <div id="np-left">
+        <div class="np-group">New Project</div>
+        <div class="np-item active" data-tpl="java"><span class="np-ic">☕</span>Java</div>
+        <div class="np-item" data-tpl="kotlin"><span class="np-ic">🟣</span>Kotlin</div>
+        <div class="np-item" data-tpl="javascript"><span class="np-ic">🟨</span>JavaScript</div>
+        <div class="np-item" data-tpl="python"><span class="np-ic">🐍</span>Python</div>
+        <div class="np-item" data-tpl="c"><span class="np-ic">🔵</span>C / C++</div>
+        <div class="np-item" data-tpl="web"><span class="np-ic">🌐</span>Web (HTML/CSS/JS)</div>
+        <div class="np-item" data-tpl="empty"><span class="np-ic">📄</span>Empty Project</div>
+        <div class="np-group">Generators</div>
+        <div class="np-item" data-tpl="maven"><span class="np-ic">🅼</span>Maven</div>
+        <div class="np-item" data-tpl="gradle"><span class="np-ic">🐘</span>Gradle</div>
+        <div class="np-item" data-tpl="spring"><span class="np-ic">🍃</span>Spring Boot</div>
+      </div>
+      <div id="np-right">
+        <div class="np-row"><label>Name:</label><input id="np-name" value="untitled"></div>
+        <div class="np-row"><label>Location:</label>
+          <span class="np-locwrap">
+            <input id="np-loc" readonly>
+            <button id="np-browse" title="Elegir carpeta">📂</button>
+          </span>
+        </div>
+        <div id="np-hint">Project will be created in: <span id="np-hint2">~\Desktop\untitled</span></div>
+        <div class="np-row"><label></label><label class="np-check"><input type="checkbox" id="np-git"> Create Git repository</label></div>
+        <div class="np-row"><label>Build system:</label>
+          <span class="np-seg"><button class="np-segbtn active" data-build="intellij">IntelliJ</button><button class="np-segbtn" data-build="maven">Maven</button><button class="np-segbtn" data-build="gradle">Gradle</button></span>
+        </div>
+        <div class="np-row"><label>JDK:</label><select id="np-jdk"><option>Cargando JDKs...</option></select><button id="np-jdk-manage" title="Gestionar / Instalar JDK" style="margin-left:6px">⚙️</button></div>
+        <div class="np-row"><label></label><label class="np-check"><input type="checkbox" id="np-sample" checked> Add sample code</label></div>
+        <div id="np-adv-toggle">▸ Advanced Settings</div>
+        <div id="np-adv" class="hidden">
+          <div class="np-row"><label>Package:</label><input id="np-pkg" value="com.example"></div>
+          <div class="np-row"><label>Group:</label><input id="np-group" value="com.example"></div>
+        </div>
+      </div>
+    </div>
+    <div id="np-foot">
+      <span id="np-status"></span>
+      <span style="flex:1"></span>
+      <button id="np-create" class="np-create">Create</button>
+      <button id="np-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="jdk-overlay" class="hidden">
+  <div id="jdk-dialog">
+    <div id="np-head"><span>☕ JDK Manager</span><span id="jdk-close">✕</span></div>
+    <div id="jdk-body">
+      <div class="jdk-h">JDKs detectados / instalados</div>
+      <div id="jdk-list"></div>
+      <div class="jdk-h">Instalar nuevo JDK (Temurin / Adoptium)</div>
+      <div id="jdk-vers"></div>
+      <div id="jdk-prog-wrap" class="hidden">
+        <div id="jdk-prog-msg">Preparando...</div>
+        <div id="jdk-bar"><div id="jdk-bar-fill"></div></div>
+      </div>
+      <div id="jdk-note">Descarga desde api.adoptium.net. Requiere internet. Se guarda en la carpeta de Anti IDE, no toca tu sistema.</div>
+    </div>
+    <div id="jdk-foot"><span id="jdk-status"></span><span style="flex:1"></span><button id="jdk-done">Cerrar</button></div>
+  </div>
+</div>
+<script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
+<script>
+window._monacoLoadError = false;
+if (typeof require === 'undefined' || !require.config) {
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js';
+  s.onerror = function(){ window._monacoLoadError = true; };
+  document.head.appendChild(s);
+}
+</script>
+<script src="renderer.js"></script>
+</body>
+</html>
